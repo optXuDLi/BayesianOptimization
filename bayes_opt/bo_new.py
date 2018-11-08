@@ -30,18 +30,8 @@ class Queue:
         self._queue.append(obj)
 
 
-class Observations:
-    def __init__(self):
-        self._x = []
-        self._target = []
-
-    def add(self, x, target):
-        self._x.append(x)
-        self._target = target
-
-
 class BayesianOptimization:
-    def __init__(self, f, bounds, random_state=None, verbose=1):
+    def __init__(self, f, pbounds, random_state=None, verbose=1):
         """"""
         self._random_state = ensure_rng(random_state)
 
@@ -52,22 +42,12 @@ class BayesianOptimization:
         # queue
         self._queue = Queue()
 
-        # observations
-        self._obs =
-
-        # Counter of iterations
-        self._i = 0
-
         # Internal GP regressor
         self._gp = GaussianProcessRegressor(
             kernel=Matern(nu=2.5),
             n_restarts_optimizer=25,
             random_state=self._random_state
         )
-
-        # non-public config for maximizing the aquisition function
-        # (used to speedup tests, but generally leave these as is)
-        self._acqkw = {'n_warmup': 100000, 'n_iter': 250}
 
         # Event initialization
         events = [Events.INIT_DONE, Events.FIT_STEP_DONE, Events.FIT_DONE]
@@ -76,11 +56,11 @@ class BayesianOptimization:
 
     def observe(self, x, target):
         """Expect observation with known target"""
-        pass
+        self._space.observe(x, target)
 
     def inspect(self, x):
         """Probe target of x"""
-        pass
+        self._space.inspect(x)
 
     def suggest(self):
         """Moxt promissing point to probe next"""
@@ -88,7 +68,7 @@ class BayesianOptimization:
 
     def _random_suggestion(self):
         """Randomly pick a point to probe in the parameter space."""
-        pass
+        return self._space.random_sample()
 
     def maximize(self,
                  init_points=5,
