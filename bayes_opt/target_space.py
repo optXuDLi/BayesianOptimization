@@ -54,6 +54,17 @@ class TargetSpace(object):
         # keep track of unique points we have seen so far
         self._cache = {}
 
+    def __contains__(self, x):
+        return _hashable(x) in self._cache
+
+    def __len__(self):
+        assert len(self._x) == len(self._y)
+        return len(self._y)
+
+    @property
+    def empty(self):
+        return len(self) == 0
+
     @property
     def x(self):
         return self._x
@@ -70,12 +81,9 @@ class TargetSpace(object):
     def keys(self):
         return self._keys
 
-    def __contains__(self, x):
-        return _hashable(x) in self._cache
-
-    def __len__(self):
-        assert len(self._x) == len(self._y)
-        return len(self._y)
+    @property
+    def bounds(self):
+        return self._bounds
 
     def observe(self, x, target):
         """
@@ -171,7 +179,7 @@ class TargetSpace(object):
         data = np.empty((1, self.dim))
         for col, (lower, upper) in enumerate(self._bounds):
             data.T[col] = self.random_state.uniform(lower, upper, size=1)
-        return data
+        return data.ravel()
 
     def max(self):
         """

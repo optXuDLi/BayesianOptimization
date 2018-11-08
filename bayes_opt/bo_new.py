@@ -20,7 +20,7 @@ class Queue:
 
     def __next__(self):
         if self.empty:
-            raise RuntimeError("Cannot retrieve next object from empty queue.")
+            raise ValueError("Cannot retrieve next object from empty queue.")
         obj = self._queue[0]
         self._queue = self._queue[1:]
         return obj
@@ -62,21 +62,52 @@ class BayesianOptimization:
         """Probe target of x"""
         self._space.inspect(x)
 
-    def suggest(self):
+    def suggest(self, utility_function):
         """Moxt promissing point to probe next"""
-        pass
+        self._gp.fit(self._space.x, self._space.target)
+
+        # Finding argmax of the acquisition function.
+        suggestion = acq_max(
+            ac=utility_function.utility,
+            gp=self._gp,
+            y_max=self._space.target.max(),
+            bounds=self._space.bounds,
+            random_state=self._random_state
+        )
+
+        return suggestion
 
     def _random_suggestion(self):
         """Randomly pick a point to probe in the parameter space."""
         return self._space.random_sample()
 
+    def _prime_queue(self, init_points):
+        """Make sure there's something in the queue at the very beginning."""
+        if self._queue.empty and self._space.empty:
+            init_points = max(init_points, 1)
+
+        for _ in range(init_points):
+            self._queue.add(self._space.random_sample())
+
     def maximize(self,
-                 init_points=5,
-                 n_iter=25,
-                 acq='ucb',
-                 kappa=2.576,
-                 xi=0.0,
+                 init_points: int=5,
+                 n_iter: int=25,
+                 acq: str='ucb',
+                 kappa: float=2.576,
+                 xi: float=0.0,
                  **gp_params):
         """Mazimize your function"""
+        self._prime_queue(init_points)
+
         util = UtilityFunction(kind=acq, kappa=kappa, xi=xi)
+        iteration = 0
+        while not self._queue.empty and iteration < n_iter:
+
+            try:
+                x_probe = next(self._queue)
+            except ValueError:
+                x_probe = self.suggest(util)
+
+            self.inspect(x_probe)
+            iteration += 1
 
