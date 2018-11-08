@@ -7,6 +7,12 @@ from .target_space import TargetSpace
 from .observer import Observable
 
 
+class Events(object):
+    INIT_DONE = 'initialized'
+    FIT_STEP_DONE = 'fit_step_done'
+    FIT_DONE = 'fit_done'
+
+
 class Queue:
     def __init__(self):
         self._queue = []
@@ -53,6 +59,16 @@ class BayesianOptimization:
         events = [Events.INIT_DONE, Events.FIT_STEP_DONE, Events.FIT_DONE]
         super(BayesianOptimization, self).__init__(events)
 
+    def set_bounds(self, new_bounds):
+        """
+        A method that allows changing the lower and upper searching bounds
+
+        Parameters
+        ----------
+        new_bounds : dict
+            A dictionary with the parameter name and its new bounds
+        """
+        self._space.set_bounds(new_bounds)
 
     def observe(self, x, target):
         """Expect observation with known target"""

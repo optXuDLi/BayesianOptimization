@@ -198,7 +198,6 @@ class TargetSpace(object):
         new_bounds : dict
             A dictionary with the parameter name and its new bounds
         """
-        # Loop through all parameters and reset the min-max bound matrix
         for row, key in enumerate(self._keys):
             if key in new_bounds:
                 self._bounds[row] = new_bounds[key]
